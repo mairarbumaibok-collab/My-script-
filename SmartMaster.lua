@@ -1,5 +1,5 @@
 -- =================================================================
--- SCRIPT NAME: SMART MASTER (FULL HUB - HYBRID CUSTOM UI)
+-- SCRIPT NAME: SMART MASTER (FULL HUB + TOGGLE ICON ⭐)
 -- THEME: Minimalist Black
 -- AUTHOR: mairarbumaibok & Gemini
 -- =================================================================
@@ -36,6 +36,33 @@ MainFrame.Parent = ScreenGui
 local MainUICorner = Instance.new("UICorner")
 MainUICorner.CornerRadius = UDim.new(0, 8)
 MainUICorner.Parent = MainFrame
+
+-- -----------------------------------------------------------------
+-- ⭐ MASTER TOGGLE BUTTON (ปุ่มรูปดาวสำหรับ พับ/เปิด หน้าต่าง)
+-- -----------------------------------------------------------------
+local StarToggleBtn = Instance.new("TextButton")
+StarToggleBtn.Name = "StarToggleBtn"
+StarToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+StarToggleBtn.Position = UDim2.new(0.02, 0, 0.15, 0)
+StarToggleBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+StarToggleBtn.Text = "⭐"
+StarToggleBtn.TextSize = 22
+StarToggleBtn.Active = true
+StarToggleBtn.Draggable = true -- สามารถลากปุ่มดาวไปวางตรงไหนก็ได้บนจอ
+StarToggleBtn.Parent = ScreenGui
+
+local StarCorner = Instance.new("UICorner")
+StarCorner.CornerRadius = UDim.new(0, 12)
+StarCorner.Parent = StarToggleBtn
+
+local StarStroke = Instance.new("UIStroke")
+StarStroke.Color = Color3.fromRGB(255, 215, 0) -- สีกรอบทอง
+StarStroke.Thickness = 2
+StarStroke.Parent = StarToggleBtn
+
+StarToggleBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = not MainFrame.Visible
+end)
 
 -- Top Bar
 local TopBar = Instance.new("Frame")
@@ -567,7 +594,7 @@ CreateToggle(Page_MySelf, "Night Vision VIP", false, 17, function(state)
 		Lighting.GlobalShadows = false
 		Lighting.Ambient = Color3.fromRGB(178, 178, 178)
 	else
-		Lighting.Brightness = _G.NormalLightingSettings.Brightness
+		Lighting.Brightness = _G.NormalLightings.Brightness
 		Lighting.ClockTime = _G.NormalLightingSettings.ClockTime
 		Lighting.FogEnd = _G.NormalLightingSettings.FogEnd
 		Lighting.GlobalShadows = _G.NormalLightingSettings.GlobalShadows
@@ -853,7 +880,7 @@ RunService.RenderStepped:Connect(function()
 		hum.Jump = true
 	end
 
-	-- Flying (Superman / Mark Invincible Pose Alignment)
+	-- Flying (Superman Pose)
 	local isFlying = flyEnabled or flyKamuiEnabled
 	if isFlying and hrp then
 		if not bodyVelocity or not bodyGyro or bodyVelocity.Parent ~= hrp then StartFly() end
