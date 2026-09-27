@@ -594,4 +594,318 @@ end)
 aimPlayerBtn.MouseButton1Click:Connect(function()
 	if aimPlayerEnabled then
 		aimPlayerActive = not aimPlayerActive
-		aimPlayerBtn.BackgroundC
+		aimPlayerBtn.BackgroundColor3 = aimPlayerActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(30, 30, 30)
+	end
+end)
+
+local espHakiEnabled = false
+CreateToggle(Page_Attack, "Observation Haki (ESP Player)", false, 3, function(state)
+	espHakiEnabled = state
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr.Character then
+			local highlight = plr.Character:FindFirstChild("HakiESP")
+			if state then
+				if not highlight then
+					highlight = Instance.new("Highlight")
+					highlight.Name = "HakiESP"
+					highlight.FillColor = Color3.fromRGB(255, 0, 0)
+					highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+					highlight.Parent = plr.Character
+				end
+			else
+				if highlight then highlight:Destroy() end
+			end
+		end
+	end
+end)
+
+local consistentPlayerBtn = CreateFloatingButton("🔒")
+local consistentPlayerTarget = nil
+
+consistentPlayerBtn.MouseButton1Click:Connect(function()
+	local closest, dist = nil, math.huge
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+			local d = (LocalPlayer.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+			if d < dist then
+				dist = d
+				closest = plr
+			end
+		end
+	end
+	consistentPlayerTarget = closest
+	if closest then
+		consistentPlayerBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+	end
+end)
+
+CreateToggle(Page_Attack, "Aimbot player consistent", false, 4, function(state)
+	consistentPlayerBtn.Visible = state
+	if not state then consistentPlayerTarget = nil consistentPlayerBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
+end)
+
+-- 2. Chess Pieces Selection
+CreateSectionHeader(Page_Attack, "2. การเลือกผู้เล่น (chess pieces)", 5)
+
+local selectedPlayer = nil
+
+local ChessFrame = Instance.new("Frame")
+ChessFrame.Size = UDim2.new(1, 0, 0, 120)
+ChessFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ChessFrame.LayoutOrder = 6
+ChessFrame.Parent = Page_Attack
+
+local ChessCorner = Instance.new("UICorner")
+ChessCorner.CornerRadius = UDim.new(0, 6)
+ChessCorner.Parent = ChessFrame
+
+local RefreshBtn = Instance.new("TextButton")
+RefreshBtn.Size = UDim2.new(1, -10, 0, 25)
+RefreshBtn.Position = UDim2.new(0, 5, 0, 5)
+RefreshBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+RefreshBtn.Text = "🔄 refresh"
+RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+RefreshBtn.Font = Enum.Font.GothamBold
+RefreshBtn.TextSize = 12
+RefreshBtn.Parent = ChessFrame
+
+local RefreshCorner = Instance.new("UICorner")
+RefreshCorner.CornerRadius = UDim.new(0, 4)
+RefreshCorner.Parent = RefreshBtn
+
+local PlayerScroll = Instance.new("ScrollingFrame")
+PlayerScroll.Size = UDim2.new(1, -10, 0, 80)
+PlayerScroll.Position = UDim2.new(0, 5, 0, 35)
+PlayerScroll.BackgroundTransparency = 1
+PlayerScroll.ScrollBarThickness = 3
+PlayerScroll.Parent = ChessFrame
+
+local PlayerListLayout = Instance.new("UIListLayout")
+PlayerListLayout.Parent = PlayerScroll
+PlayerListLayout.Padding = UDim.new(0, 4)
+
+local function PopulatePlayers()
+	for _, c in ipairs(PlayerScroll:GetChildren()) do
+		if c:IsA("TextButton") then c:Destroy() end
+	end
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer then
+			local pBtn = Instance.new("TextButton")
+			pBtn.Size = UDim2.new(1, -5, 0, 22)
+			pBtn.BackgroundColor3 = (selectedPlayer == plr) and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(30, 30, 30)
+			pBtn.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
+			pBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+			pBtn.Font = Enum.Font.Gotham
+			pBtn.TextSize = 11
+			pBtn.Parent = PlayerScroll
+
+			local pCorner = Instance.new("UICorner")
+			pCorner.CornerRadius = UDim.new(0, 4)
+			pCorner.Parent = pBtn
+
+			pBtn.MouseButton1Click:Connect(function()
+				selectedPlayer = plr
+				PopulatePlayers()
+			end)
+		end
+	end
+	PlayerScroll.CanvasSize = UDim2.new(0, 0, 0, PlayerListLayout.AbsoluteContentSize.Y + 10)
+end
+
+RefreshBtn.MouseButton1Click:Connect(PopulatePlayers)
+PopulatePlayers()
+
+-- Tween To Player
+local activeTween = nil
+CreateToggle(Page_Attack, "Tween to Selected Player", false, 7, function(state)
+	if state and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+		local targetHrp = selectedPlayer.Character.HumanoidRootPart
+		local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		if myHrp then
+			local targetPos = targetHrp.Position + (myHrp.Position - targetHrp.Position).Unit * 10
+			local distance = (myHrp.Position - targetPos).Magnitude
+			local tweenInfo = TweenInfo.new(distance / 30, Enum.EasingStyle.Linear)
+			activeTween = TweenService:Create(myHrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
+			activeTween:Play()
+		end
+	else
+		if activeTween then
+			activeTween:Cancel()
+			activeTween = nil
+		end
+	end
+end)
+
+-- Spectate Player
+CreateToggle(Page_Attack, "Spectate Selected Player", false, 8, function(state)
+	if state and selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
+		Camera.CameraSubject = selectedPlayer.Character.Humanoid
+	else
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+			Camera.CameraSubject = LocalPlayer.Character.Humanoid
+		end
+	end
+end)
+
+-- 3. Mob System
+CreateSectionHeader(Page_Attack, "3. ระบบมอนสเตอร์ (Mob System)", 9)
+
+local aimMobBtn = CreateFloatingButton("👾")
+local aimMobActive, aimMobEnabled = false, false
+
+CreateToggle(Page_Attack, "Aimbot mob (nearest)", false, 10, function(state)
+	aimMobEnabled = state
+	aimMobBtn.Visible = state
+	if not state then aimMobActive = false aimMobBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
+end)
+
+aimMobBtn.MouseButton1Click:Connect(function()
+	if aimMobEnabled then
+		aimMobActive = not aimMobActive
+		aimMobBtn.BackgroundColor3 = aimMobActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(30, 30, 30)
+	end
+end)
+
+CreateToggle(Page_Attack, "Observation Haki v2 (ESP Mobs)", false, 11, function(state)
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("Humanoid") and not Players:GetPlayerFromCharacter(obj.Parent) and obj.Parent:FindFirstChild("HumanoidRootPart") then
+			local highlight = obj.Parent:FindFirstChild("MobHakiESP")
+			if state then
+				if not highlight then
+					highlight = Instance.new("Highlight")
+					highlight.Name = "MobHakiESP"
+					highlight.FillColor = Color3.fromRGB(255, 170, 0)
+					highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+					highlight.Parent = obj.Parent
+				end
+			else
+				if highlight then highlight:Destroy() end
+			end
+		end
+	end
+end)
+
+local consistentMobBtn = CreateFloatingButton("🔒")
+local consistentMobTarget = nil
+
+consistentMobBtn.MouseButton1Click:Connect(function()
+	local closest, dist = nil, math.huge
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("Humanoid") and not Players:GetPlayerFromCharacter(obj.Parent) and obj.Parent:FindFirstChild("HumanoidRootPart") then
+			local hrp = obj.Parent.HumanoidRootPart
+			local _, visible = Camera:WorldToViewportPoint(hrp.Position)
+			if visible then
+				local d = (LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+				if d < dist then
+					dist = d
+					closest = hrp
+				end
+			end
+		end
+	end
+	consistentMobTarget = closest
+	if closest then consistentMobBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0) end
+end)
+
+CreateToggle(Page_Attack, "Aimbot mob consistent (In-Sight)", false, 12, function(state)
+	consistentMobBtn.Visible = state
+	if not state then consistentMobTarget = nil consistentMobBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
+end)
+
+-- =================================================================
+-- BACKGROUND LOOPS & LOGIC
+-- =================================================================
+
+-- Stepped Loop (Noclip & GodMode)
+RunService.Stepped:Connect(function()
+	if (kamuiEnabled or flyKamuiEnabled or activeTween) and LocalPlayer.Character then
+		for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+			if part:IsA("BasePart") then part.CanCollide = false end
+		end
+	end
+
+	if godModeEnabled and LocalPlayer.Character then
+		local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		if hum then
+			hum.Health = hum.MaxHealth
+			hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+		end
+	end
+end)
+
+-- RenderStepped Loop (Movement, Flying, Aimbots)
+RunService.RenderStepped:Connect(function()
+	local char = LocalPlayer.Character
+	if not char then return end
+	local hum = char:FindFirstChild("Humanoid")
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+
+	if hum then
+		if currentSpeed ~= 16 then hum.WalkSpeed = currentSpeed end
+		if currentJumpPower ~= 50 then hum.UseJumpPower = true hum.JumpPower = currentJumpPower end
+	end
+
+	if autoWalkEnabled and autoWalkActive and hrp and hum then
+		hum:Move(Vector3.new(hrp.CFrame.LookVector.X, 0, hrp.CFrame.LookVector.Z), false)
+	end
+
+	if autoJumpEnabled and autoJumpActive and hum then
+		hum.Jump = true
+	end
+
+	-- Flying (Superman / Mark Invincible Pose Alignment)
+	local isFlying = flyEnabled or flyKamuiEnabled
+	if isFlying and hrp then
+		if not bodyVelocity or not bodyGyro or bodyVelocity.Parent ~= hrp then StartFly() end
+		local moveVector = hum and hum.MoveDirection or Vector3.zero
+		local realVelocity = flySpeed * 10
+
+		if moveVector.Magnitude > 0 then
+			local flyDirection = (Camera.CFrame.LookVector * -moveVector.Z) + (Camera.CFrame.RightVector * moveVector.X)
+			if flyDirection.Magnitude > 0 then flyDirection = flyDirection.Unit end
+			bodyVelocity.Velocity = flyDirection * realVelocity
+			bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + flyDirection) * CFrame.Angles(math.rad(-80), 0, 0)
+		else
+			bodyVelocity.Velocity = Vector3.zero
+			bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + Camera.CFrame.LookVector) * CFrame.Angles(math.rad(-20), 0, 0)
+		end
+	end
+
+	-- Aimbot Player Nearest
+	if aimPlayerEnabled and aimPlayerActive and hrp then
+		local closest, dist = nil, math.huge
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+				local d = (hrp.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+				if d < dist then dist = d closest = plr.Character.HumanoidRootPart end
+			end
+		end
+		if closest then Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, closest.Position) end
+	end
+
+	-- Aimbot Player Consistent
+	if consistentPlayerTarget and consistentPlayerTarget.Parent and consistentPlayerTarget.Parent:FindFirstChild("HumanoidRootPart") then
+		Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, consistentPlayerTarget.Parent.HumanoidRootPart.Position)
+	end
+
+	-- Aimbot Mob Nearest
+	if aimMobEnabled and aimMobActive and hrp then
+		local closest, dist = nil, math.huge
+		for _, obj in ipairs(workspace:GetDescendants()) do
+			if obj:IsA("Humanoid") and not Players:GetPlayerFromCharacter(obj.Parent) and obj.Parent:FindFirstChild("HumanoidRootPart") then
+				local mHrp = obj.Parent.HumanoidRootPart
+				local d = (hrp.Position - mHrp.Position).Magnitude
+				if d < dist then dist = d closest = mHrp end
+			end
+		end
+		if closest then Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, closest.Position) end
+	end
+
+	-- Aimbot Mob Consistent (In-Sight Only)
+	if consistentMobTarget and consistentMobTarget.Parent then
+		local _, visible = Camera:WorldToViewportPoint(consistentMobTarget.Position)
+		if visible then
+			Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, consistentMobTarget.Position)
+		end
+	end
+end)
