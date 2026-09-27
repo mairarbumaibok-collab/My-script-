@@ -13,6 +13,11 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Camera = workspace.CurrentCamera
 
+-- Global States (ประกาศตัวแปรล่วงหน้าเพื่อป้องกัน Error)
+local kamuiEnabled = false
+local flyKamuiEnabled = false
+local isTweeningToTarget = false
+
 -- -----------------------------------------------------------------
 -- GUI INITIALIZATION
 -- -----------------------------------------------------------------
@@ -446,10 +451,6 @@ end)
 -- === 3. Noclip & Invisibility ===
 CreateSectionHeader(Page_MySelf, "3. ทะลุกำแพง & ล่องหน", 8)
 
-local kamuiEnabled = false
-local flyKamuiEnabled = false
-local isTweeningToTarget = false
-
 CreateToggle(Page_MySelf, "Kamui (Noclip)", false, 9, function(state) kamuiEnabled = state end)
 
 RunService.Stepped:Connect(function()
@@ -579,5 +580,4 @@ end)
 -- === 6. Night Vision (เติมแสง) ===
 CreateSectionHeader(Page_MySelf, "6. เติมแสง (Night Vision VIP)", 18)
 
-local fullBrightEnabled = false
-CreateToggle(Page_MySelf, "FullBright (สว่างกลางคืน)", 
+local fullBrightEnabled = fal
