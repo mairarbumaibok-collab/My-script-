@@ -1,5 +1,5 @@
 -- =================================================================
--- SCRIPT NAME: SMART MASTER (RAYFIELD FULL HUB)
+-- SCRIPT NAME: SMART MASTER (FULL HUB)
 -- DEVELOPER: mairarbumaibok
 -- =================================================================
 
@@ -9,10 +9,12 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- Create Main Window
+-- Create Window
 local Window = Rayfield:CreateWindow({
    Name = "SMART MASTER - ADMIN HUB",
    LoadingTitle = "SMART MASTER HUB",
@@ -22,22 +24,62 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
+-- Floating Buttons Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SmartMaster_FloatingUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local FloatingContainer = Instance.new("Frame")
+FloatingContainer.Name = "FloatingContainer"
+FloatingContainer.Size = UDim2.new(0, 300, 0, 50)
+FloatingContainer.Position = UDim2.new(0.02, 0, 0.65, 0)
+FloatingContainer.BackgroundTransparency = 1
+FloatingContainer.Parent = ScreenGui
+
+local FloatingList = Instance.new("UIListLayout")
+FloatingList.Parent = FloatingContainer
+FloatingList.FillDirection = Enum.FillDirection.Horizontal
+FloatingList.Padding = UDim.new(0, 8)
+
+local function CreateFloatingButton(textIcon)
+   local Btn = Instance.new("TextButton")
+   Btn.Size = UDim2.new(0, 45, 0, 45)
+   Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+   Btn.Text = textIcon
+   Btn.TextSize = 18
+   Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+   Btn.Visible = false
+   Btn.Parent = FloatingContainer
+
+   local Corner = Instance.new("UICorner")
+   Corner.CornerRadius = UDim.new(0, 10)
+   Corner.Parent = Btn
+
+   local Stroke = Instance.new("UIStroke")
+   Stroke.Color = Color3.fromRGB(80, 80, 80)
+   Stroke.Thickness = 1.5
+   Stroke.Parent = Btn
+
+   return Btn
+end
+
 -- ==========================================
--- TAB 1: MY SELF (ฟังก์ชันตัวละคร)
+-- TAB 1: MY SELF
 -- ==========================================
 local TabMySelf = Window:CreateTab("👤 My Self", 4483362458)
 
--- --- 1. WALKING ---
-TabMySelf:CreateSection("1. การเดิน (Walking)")
+-- 1. การเดิน
+TabMySelf:CreateSection("1. การเดิน")
 
 local currentSpeed = 16
 TabMySelf:CreateSlider({
-   Name = "Ultra Speed",
+   Name = "ultra speed",
    Range = {16, 500},
    Increment = 1,
-   Suffix = "Speed",
+   Suffix = " Speed",
    CurrentValue = 16,
-   Flag = "SpeedSlider",
+   Flag = "UltraSpeed",
    Callback = function(Value)
       currentSpeed = Value
       if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
@@ -47,24 +89,36 @@ TabMySelf:CreateSlider({
 })
 
 local autoWalkEnabled = false
+local autoWalkActive = false
+local btnAutoWalk = CreateFloatingButton("👟")
+
 TabMySelf:CreateToggle({
-   Name = "Auto Walk (เดินแมพเอง)",
+   Name = "auto walk",
    CurrentValue = false,
    Flag = "AutoWalkToggle",
-   Callback = function(Value) autoWalkEnabled = Value end,
+   Callback = function(Value)
+      autoWalkEnabled = Value
+      btnAutoWalk.Visible = Value
+      if not Value then autoWalkActive = false btnAutoWalk.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
+   end,
 })
 
--- --- 2. JUMPING ---
-TabMySelf:CreateSection("2. การกระโดด (Jumping)")
+btnAutoWalk.MouseButton1Click:Connect(function()
+   autoWalkActive = not autoWalkActive
+   btnAutoWalk.BackgroundColor3 = autoWalkActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(30, 30, 30)
+end)
+
+-- 2. การกระโดด
+TabMySelf:CreateSection("2. การกระโดด")
 
 local currentJumpPower = 50
 TabMySelf:CreateSlider({
-   Name = "Ultra Jump",
+   Name = "ultra jump",
    Range = {50, 500},
-   Increment = 5,
-   Suffix = "Power",
+   Increment = 1,
+   Suffix = " Jump",
    CurrentValue = 50,
-   Flag = "JumpSlider",
+   Flag = "UltraJump",
    Callback = function(Value)
       currentJumpPower = Value
       if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
@@ -75,29 +129,41 @@ TabMySelf:CreateSlider({
 })
 
 local autoJumpEnabled = false
+local autoJumpActive = false
+local btnAutoJump = CreateFloatingButton("🦘")
+
 TabMySelf:CreateToggle({
-   Name = "Auto Jump (กระโดดรัวๆ)",
+   Name = "auto jump",
    CurrentValue = false,
    Flag = "AutoJumpToggle",
-   Callback = function(Value) autoJumpEnabled = Value end,
+   Callback = function(Value)
+      autoJumpEnabled = Value
+      btnAutoJump.Visible = Value
+      if not Value then autoJumpActive = false btnAutoJump.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
+   end,
 })
+
+btnAutoJump.MouseButton1Click:Connect(function()
+   autoJumpActive = not autoJumpActive
+   btnAutoJump.BackgroundColor3 = autoJumpActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(30, 30, 30)
+end)
 
 local geppoEnabled = false
 TabMySelf:CreateToggle({
-   Name = "Geppo (Air Jump / กระโดดกลางอากาศ)",
+   Name = "geppo",
    CurrentValue = false,
    Flag = "GeppoToggle",
    Callback = function(Value) geppoEnabled = Value end,
 })
 
--- --- 3. NOCLIP & INVISIBILITY ---
+-- 3. ทะลุกำแพง & ล่องหน
 TabMySelf:CreateSection("3. ทะลุกำแพง & ล่องหน")
 
 local kamuiEnabled = false
 TabMySelf:CreateToggle({
-   Name = "Kamui (Noclip ทะลุสิ่งกีดขวาง)",
+   Name = "kamui",
    CurrentValue = false,
-   Flag = "NoclipToggle",
+   Flag = "KamuiToggle",
    Callback = function(Value) kamuiEnabled = Value end,
 })
 
@@ -117,12 +183,12 @@ TabMySelf:CreateToggle({
    end,
 })
 
--- --- 4. GOD MODE ---
-TabMySelf:CreateSection("4. ระบบอมตะ (God Mode)")
+-- 4. บิน & อมตะ
+TabMySelf:CreateSection("4. ระบบบิน & อมตะ")
 
 local godModeEnabled = false
 TabMySelf:CreateToggle({
-   Name = "God Mode (Lock Health / อมตะ)",
+   Name = "God Mode (อมตะ)",
    CurrentValue = false,
    Flag = "GodModeToggle",
    Callback = function(Value)
@@ -133,24 +199,21 @@ TabMySelf:CreateToggle({
    end,
 })
 
--- --- 5. PHYSICS FLY ---
-TabMySelf:CreateSection("5. ระบบบิน (Physics Fly Mobile)")
-
 local flySpeed = 5
 TabMySelf:CreateSlider({
-   Name = "Fly Speed (ความเร็วบิน)",
+   Name = "Fly Speed",
    Range = {1, 100},
    Increment = 1,
-   Suffix = "x",
+   Suffix = " Speed",
    CurrentValue = 5,
-   Flag = "FlySpeedSlider",
+   Flag = "FlySpeed",
    Callback = function(Value) flySpeed = Value end,
 })
 
-local flyEnabled = false
+local flyEnabled, flyKamuiEnabled = false, false
 local bodyVelocity, bodyGyro = nil, nil
 
-local function StopPhysicsFly()
+local function StopFly()
    if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
    if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
@@ -158,14 +221,14 @@ local function StopPhysicsFly()
    end
 end
 
-local function StartPhysicsFly()
+local function StartFly()
    local char = LocalPlayer.Character
    if not char then return end
    local hrp = char:FindFirstChild("HumanoidRootPart")
    local hum = char:FindFirstChildOfClass("Humanoid")
    if not hrp or not hum then return end
 
-   StopPhysicsFly()
+   StopFly()
    hum.PlatformStand = true
 
    bodyVelocity = Instance.new("BodyVelocity")
@@ -181,169 +244,247 @@ local function StartPhysicsFly()
 end
 
 TabMySelf:CreateToggle({
-   Name = "Fly (บินเหินฟ้า)",
+   Name = "fly",
    CurrentValue = false,
    Flag = "FlyToggle",
    Callback = function(Value)
       flyEnabled = Value
-      if flyEnabled then StartPhysicsFly() else StopPhysicsFly() end
+      if flyEnabled then StartFly() else StopFly() end
    end,
 })
 
--- --- 6. NIGHT VISION ---
-TabMySelf:CreateSection("6. เติมแสง (Night Vision VIP)")
+TabMySelf:CreateToggle({
+   Name = "fly kamui",
+   CurrentValue = false,
+   Flag = "FlyKamuiToggle",
+   Callback = function(Value)
+      flyKamuiEnabled = Value
+      if flyKamuiEnabled then StartFly() else StopFly() end
+   end,
+})
+
+-- 5. เติมแสง
+TabMySelf:CreateSection("5. เติมแสง")
+
+_G.FullBrightEnabled = false
+if not _G.FullBrightExecuted then
+   _G.NormalLightingSettings = {
+      Brightness = Lighting.Brightness,
+      ClockTime = Lighting.ClockTime,
+      FogEnd = Lighting.FogEnd,
+      GlobalShadows = Lighting.GlobalShadows,
+      Ambient = Lighting.Ambient
+   }
+   _G.FullBrightExecuted = true
+end
 
 TabMySelf:CreateToggle({
-   Name = "Night Vision (แมพสว่าง)",
+   Name = "Night Vision VIP",
    CurrentValue = false,
    Flag = "NightVisionToggle",
    Callback = function(Value)
+      _G.FullBrightEnabled = Value
       if Value then
-         Lighting.Ambient = Color3.fromRGB(255, 255, 255)
-         Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
-         Lighting.Brightness = 2
-      else
-         Lighting.Ambient = Color3.fromRGB(128, 128, 128)
-         Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
          Lighting.Brightness = 1
+         Lighting.ClockTime = 12
+         Lighting.FogEnd = 786543
+         Lighting.GlobalShadows = false
+         Lighting.Ambient = Color3.fromRGB(178, 178, 178)
+      else
+         Lighting.Brightness = _G.NormalLightingSettings.Brightness
+         Lighting.ClockTime = _G.NormalLightingSettings.ClockTime
+         Lighting.FogEnd = _G.NormalLightingSettings.FogEnd
+         Lighting.GlobalShadows = _G.NormalLightingSettings.GlobalShadows
+         Lighting.Ambient = _G.NormalLightingSettings.Ambient
       end
    end,
 })
 
 -- ==========================================
--- TAB 2: ATTACK & TARGETING (ระบบโจมตี)
+-- TAB 2: ATTACK
 -- ==========================================
 local TabAttack = Window:CreateTab("⚔️ Attack", 4483362458)
 
--- --- 1. AUTO ATTACK ---
-TabAttack:CreateSection("1. ระบบโจมตีออโต้ (Combat Mechanics)")
+-- Player Target Systems
+TabAttack:CreateSection("Player Target Options")
 
-local autoClickerEnabled = false
-TabAttack:CreateToggle({
-   Name = "Auto Clicker (โจมตี/ตีอาวุธออโต้)",
-   CurrentValue = false,
-   Flag = "AutoClickToggle",
-   Callback = function(Value) autoClickerEnabled = Value end,
-})
-
-local killAuraEnabled = false
-local auraDistance = 15
-TabAttack:CreateSlider({
-   Name = "Kill Aura Range (ระยะออร่าโจมตี)",
-   Range = {5, 50},
-   Increment = 1,
-   Suffix = "m",
-   CurrentValue = 15,
-   Flag = "AuraRangeSlider",
-   Callback = function(Value) auraDistance = Value end,
-})
+local aimbotPlayerNearest = false
+local btnAimbotNearest = CreateFloatingButton("🎯")
 
 TabAttack:CreateToggle({
-   Name = "Kill Aura (โจมตีศัตรูรอบตัวออโต้)",
+   Name = "Aimbot player (nearest)",
    CurrentValue = false,
-   Flag = "KillAuraToggle",
-   Callback = function(Value) killAuraEnabled = Value end,
-})
-
--- --- 2. PLAYER ESP & TRACKING ---
-TabAttack:CreateSection("2. ระบบติดตามและมองทะลุ (ESP & Teleport)")
-
-local espEnabled = false
-TabAttack:CreateToggle({
-   Name = "Player ESP (มองเห็นผู้เล่นทุกคนทะลุกำแพง)",
-   CurrentValue = false,
-   Flag = "EspToggle",
+   Flag = "AimbotNearestToggle",
    Callback = function(Value)
-      espEnabled = Value
-      for _, player in ipairs(Players:GetPlayers()) do
-         if player ~= LocalPlayer and player.Character then
-            local highlight = player.Character:FindFirstChild("SM_Highlight")
-            if espEnabled then
-               if not highlight then
-                  highlight = Instance.new("Highlight")
-                  highlight.Name = "SM_Highlight"
-                  highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                  highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                  highlight.Parent = player.Character
+      aimbotPlayerNearest = Value
+      btnAimbotNearest.Visible = Value
+   end,
+})
+
+local consistentTarget = nil
+local aimbotConsistent = false
+TabAttack:CreateToggle({
+   Name = "Aimbot player consistent",
+   CurrentValue = false,
+   Flag = "AimbotConsistentToggle",
+   Callback = function(Value)
+      aimbotConsistent = Value
+      if Value then
+         -- Find closest player and lock
+         local closest = nil
+         local maxDist = math.huge
+         for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+               local dist = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+               if dist < maxDist then
+                  maxDist = dist
+                  closest = p
                end
-            else
-               if highlight then highlight:Destroy() end
             end
          end
+         consistentTarget = closest
+      else
+         consistentTarget = nil
       end
    end,
 })
 
--- สร้างรายชื่อผู้เล่นในเซิร์ฟเวอร์สำหรับเลือกวาร์ป
-local selectedTargetPlayer = nil
-local playerList = {}
-for _, p in ipairs(Players:GetPlayers()) do
-   if p ~= LocalPlayer then table.insert(playerList, p.Name) end
+-- ESP Player
+local espPlayerEnabled = false
+local espFolder = Instance.new("Folder", workspace)
+espFolder.Name = "SmartMaster_ESP"
+
+TabAttack:CreateToggle({
+   Name = "Observation Haki (ESP Player)",
+   CurrentValue = false,
+   Flag = "ESPObservation",
+   Callback = function(Value)
+      espPlayerEnabled = Value
+      if not Value then
+         espFolder:ClearAllChildren()
+      end
+   end,
+})
+
+-- Chess Pieces & Player Actions
+TabAttack:CreateSection("Chess Pieces (Select Player)")
+
+local selectedPlayerName = nil
+local playerDropdown = nil
+
+local function GetPlayerNames()
+   local names = {}
+   for _, p in ipairs(Players:GetPlayers()) do
+      if p ~= LocalPlayer then table.insert(names, p.Name) end
+   end
+   return #names > 0 and names or {"ไม่มีผู้เล่นอื่น"}
 end
 
-local PlayerDropdown = TabAttack:CreateDropdown({
-   Name = "เลือกเป้าหมายผู้เล่น (Target Player)",
-   Options = #playerList > 0 and playerList or {"ไม่มีผู้เล่นอื่น"},
-   CurrentOption = playerList[1] or "ไม่มีผู้เล่นอื่น",
-   Flag = "TargetDropdown",
+playerDropdown = TabAttack:CreateDropdown({
+   Name = "chess pieces (เลือกผู้เล่น)",
+   Options = GetPlayerNames(),
+   CurrentOption = "เลือกผู้เล่น",
+   Flag = "ChessPiecesDropdown",
    Callback = function(Option)
-      selectedTargetPlayer = Option[1] or Option
+      if type(Option) == "table" then Option = Option[1] end
+      selectedPlayerName = Option
    end,
 })
 
--- ปุ่มอัปเดตรายชื่อผู้เล่น
 TabAttack:CreateButton({
-   Name = "🔄 Refresh Player List (อัปเดตรายชื่อผู้เล่น)",
+   Name = "refresh รายชื่อผู้เล่น",
    Callback = function()
-      local newList = {}
-      for _, p in ipairs(Players:GetPlayers()) do
-         if p ~= LocalPlayer then table.insert(newList, p.Name) end
+      if playerDropdown then
+         playerDropdown:Refresh(GetPlayerNames())
       end
-      PlayerDropdown:Refresh(#newList > 0 and newList or {"ไม่มีผู้เล่นอื่น"})
    end,
 })
 
-TabAttack:CreateButton({
-   Name = "⚡ Teleport to Player (วาร์ปไปหาเป้าหมาย)",
-   Callback = function()
-      if selectedTargetPlayer then
-         local target = Players:FindFirstChild(selectedTargetPlayer)
-         if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+local currentTween = nil
+local tweenToPlayer = false
+TabAttack:CreateToggle({
+   Name = "Tween ไปหาผู้เล่นที่เลือก",
+   CurrentValue = false,
+   Flag = "TweenPlayerToggle",
+   Callback = function(Value)
+      tweenToPlayer = Value
+      if not Value and currentTween then
+         currentTween:Cancel()
+         currentTween = nil
+      end
+   end,
+})
+
+local specPlayerEnabled = false
+TabAttack:CreateToggle({
+   Name = "แอบมองผู้เล่นที่เลือก (Spectate)",
+   CurrentValue = false,
+   Flag = "SpectatePlayerToggle",
+   Callback = function(Value)
+      specPlayerEnabled = Value
+      if not Value then
+         Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+      end
+   end,
+})
+
+-- Mob Target Systems
+TabAttack:CreateSection("Mob Target Options")
+
+local aimbotMobNearest = false
+TabAttack:CreateToggle({
+   Name = "Aimbot mob (nearest)",
+   CurrentValue = false,
+   Flag = "AimbotMobNearest",
+   Callback = function(Value) aimbotMobNearest = Value end,
+})
+
+local aimbotMobConsistent = false
+local consistentMobTarget = nil
+TabAttack:CreateToggle({
+   Name = "Aimbot mob consistent (เล็งตัวเดิม)",
+   CurrentValue = false,
+   Flag = "AimbotMobConsistent",
+   Callback = function(Value)
+      aimbotMobConsistent = Value
+      if not Value then consistentMobTarget = nil end
+   end,
+})
+
+local espMobEnabled = false
+TabAttack:CreateToggle({
+   Name = "Observation Haki v2 (ESP Mob)",
+   CurrentValue = false,
+   Flag = "ESPMobToggle",
+   Callback = function(Value)
+      espMobEnabled = Value
+      if not Value then
+         for _, v in ipairs(workspace:GetDescendants()) do
+            if v.Name == "MobHighlight" then v:Destroy() end
          end
       end
    end,
 })
 
--- --- 3. SERVER UTILITIES ---
-TabAttack:CreateSection("3. การจัดการเซิร์ฟเวอร์")
-
-TabAttack:CreateButton({
-   Name = "Rejoin Server (เข้าเซิร์ฟใหม่)",
-   Callback = function()
-      game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
-   end,
-})
-
 -- ==========================================
--- BACKGROUND LOGIC LOOPS
+-- BACKGROUND LOGICS & LOOPS
 -- ==========================================
 
--- Jump Request for Geppo
+-- Geppo Air Jump
 UserInputService.JumpRequest:Connect(function()
    if geppoEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
       LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
    end
 end)
 
--- Stepped Loop (GodMode & Noclip)
+-- Stepped Loop (Kamui & GodMode)
 RunService.Stepped:Connect(function()
-   if kamuiEnabled and LocalPlayer.Character then
+   if (kamuiEnabled or flyKamuiEnabled or tweenToPlayer) and LocalPlayer.Character then
       for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
          if part:IsA("BasePart") then part.CanCollide = false end
       end
    end
-   
+
    if godModeEnabled and LocalPlayer.Character then
       local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
       if hum then
@@ -353,11 +494,11 @@ RunService.Stepped:Connect(function()
    end
 end)
 
--- RenderStepped Loop
+-- RenderStepped Main Loop
 RunService.RenderStepped:Connect(function()
    local char = LocalPlayer.Character
    if not char then return end
-   local hum = char:FindFirstChild("Humanoid")
+   local hum = char:FindFirstChildOfClass("Humanoid")
    local hrp = char:FindFirstChild("HumanoidRootPart")
 
    -- Lock Speed & Jump
@@ -369,42 +510,24 @@ RunService.RenderStepped:Connect(function()
       end
    end
 
-   -- Auto Walk & Auto Jump
-   if autoWalkEnabled and hrp and hum then
+   -- Auto Walk
+   if autoWalkEnabled and autoWalkActive and hrp and hum then
       hum:Move(Vector3.new(hrp.CFrame.LookVector.X, 0, hrp.CFrame.LookVector.Z), false)
    end
-   if autoJumpEnabled and hum then hum.Jump = true end
 
-   -- Auto Clicker Logic
-   if autoClickerEnabled and char then
-      local tool = char:FindFirstChildOfClass("Tool")
-      if tool then tool:Activate() end
-   end
-
-   -- Kill Aura Logic
-   if killAuraEnabled and hrp then
-      for _, target in ipairs(Players:GetPlayers()) do
-         if target ~= LocalPlayer and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            local targetHrp = target.Character.HumanoidRootPart
-            local distance = (hrp.Position - targetHrp.Position).Magnitude
-            if distance <= auraDistance then
-               local tool = char:FindFirstChildOfClass("Tool")
-               if tool then tool:Activate() end
-            end
-         end
-      end
+   -- Auto Jump
+   if autoJumpEnabled and autoJumpActive and hum then
+      hum.Jump = true
    end
 
    -- Flying Logic
-   if flyEnabled and hrp then
-      local cam = workspace.CurrentCamera
-      if not bodyVelocity or not bodyGyro or bodyVelocity.Parent ~= hrp then StartPhysicsFly() end
-
+   if (flyEnabled or flyKamuiEnabled) and hrp then
+      if not bodyVelocity or not bodyGyro or bodyVelocity.Parent ~= hrp then StartFly() end
       local moveVector = hum and hum.MoveDirection or Vector3.zero
       local realVelocity = flySpeed * 10
 
       if moveVector.Magnitude > 0 then
-         local camCFrame = cam.CFrame
+         local camCFrame = Camera.CFrame
          local flyDirection = (camCFrame.LookVector * -moveVector.Z) + (camCFrame.RightVector * moveVector.X)
          if flyDirection.Magnitude > 0 then flyDirection = flyDirection.Unit end
 
@@ -412,14 +535,102 @@ RunService.RenderStepped:Connect(function()
          bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + flyDirection) * CFrame.Angles(math.rad(-70), 0, 0)
       else
          bodyVelocity.Velocity = Vector3.zero
-         bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + cam.CFrame.LookVector)
+         bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + Camera.CFrame.LookVector)
+      end
+   end
+
+   -- Player Aimbot Nearest
+   if aimbotPlayerNearest and hrp then
+      local closest = nil
+      local maxDist = math.huge
+      for _, p in ipairs(Players:GetPlayers()) do
+         if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (hrp.Position - p.Character.HumanoidRootPart.Position).Magnitude
+            if dist < maxDist then
+               maxDist = dist
+               closest = p
+            end
+         end
+      end
+      if closest and closest.Character and closest.Character:FindFirstChild("HumanoidRootPart") then
+         Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, closest.Character.HumanoidRootPart.Position)
+      end
+   end
+
+   -- Player Aimbot Consistent
+   if aimbotConsistent and consistentTarget and consistentTarget.Character and consistentTarget.Character:FindFirstChild("HumanoidRootPart") then
+      Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, consistentTarget.Character.HumanoidRootPart.Position)
+   end
+
+   -- Mob Aimbot (Nearest & Visible Only)
+   if aimbotMobNearest and hrp then
+      local closestMob = nil
+      local maxDist = math.huge
+      for _, obj in ipairs(workspace:GetDescendants()) do
+         if obj:IsA("Humanoid") and obj.Parent ~= char and not Players:GetPlayerFromCharacter(obj.Parent) then
+            local mobHrp = obj.Parent:FindFirstChild("HumanoidRootPart") or obj.Parent:FindFirstChild("Head")
+            if mobHrp then
+               local _, isVisible = Camera:WorldToScreenPoint(mobHrp.Position)
+               if isVisible then
+                  local ray = Ray.new(Camera.CFrame.Position, (mobHrp.Position - Camera.CFrame.Position).Unit * 500)
+                  local hit = workspace:FindPartOnWithIgnoreList(ray, {char})
+                  if hit and hit:IsDescendantOf(obj.Parent) then
+                     local dist = (hrp.Position - mobHrp.Position).Magnitude
+                     if dist < maxDist then
+                        maxDist = dist
+                        closestMob = mobHrp
+                     end
+                  end
+               end
+            end
+         end
+      end
+      if closestMob then
+         Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, closestMob.Position)
+      end
+   end
+
+   -- Tween To Selected Player
+   if tweenToPlayer and selectedPlayerName and hrp then
+      local targetP = Players:FindFirstChild(selectedPlayerName)
+      if targetP and targetP.Character and targetP.Character:FindFirstChild("HumanoidRootPart") then
+         local targetHrp = targetP.Character.HumanoidRootPart
+         local dist = (hrp.Position - targetHrp.Position).Magnitude
+         if dist > 10 then
+            local targetPos = targetHrp.Position - (targetHrp.Position - hrp.Position).Unit * 10
+            local tweenInfo = TweenInfo.new(dist / 30, Enum.EasingStyle.Linear)
+            if currentTween then currentTween:Cancel() end
+            currentTween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
+            currentTween:Play()
+         end
+      end
+   end
+
+   -- Spectate Player
+   if specPlayerEnabled and selectedPlayerName then
+      local targetP = Players:FindFirstChild(selectedPlayerName)
+      if targetP and targetP.Character and targetP.Character:FindFirstChild("Humanoid") then
+         Camera.CameraSubject = targetP.Character.Humanoid
       end
    end
 end)
 
--- Notify Completed
-Rayfield:Notify({
-   Title = "SMART MASTER Ready!",
-   Content = "อัปเดตฟังก์ชันแท็บ Attack สมบูรณ์แล้วครับ!",
-   Duration = 5,
-})
+-- ESP Players Loop
+task.spawn(function()
+   while task.wait(1) do
+      if espPlayerEnabled then
+         espFolder:ClearAllChildren()
+         for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+               local box = Instance.new("Highlight")
+               box.Name = "ESP_" .. p.Name
+               box.Adornee = p.Character
+               box.FillColor = Color3.fromRGB(255, 0, 0)
+               box.OutlineColor = Color3.fromRGB(255, 255, 255)
+               box.Parent = espFolder
+            end
+         end
+      end
+
+      if espMobEnabled then
+         for _, obj in ipairs(workspace
