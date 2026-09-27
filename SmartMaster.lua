@@ -1,9 +1,8 @@
 -- =================================================================
--- SCRIPT NAME: SMART MASTER (FULL HUB)
--- DEVELOPER: mairarbumaibok
+-- SCRIPT NAME: SMART MASTER (FULL HUB - HYBRID CUSTOM UI)
+-- THEME: Minimalist Black
+-- AUTHOR: mairarbumaibok & Gemini
 -- =================================================================
-
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -12,27 +11,159 @@ local Lighting = game:GetService("Lighting")
 local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Camera = workspace.CurrentCamera
 
--- Create Window
-local Window = Rayfield:CreateWindow({
-   Name = "SMART MASTER - ADMIN HUB",
-   LoadingTitle = "SMART MASTER HUB",
-   LoadingSubtitle = "by mairarbumaibok",
-   ConfigurationSaving = { Enabled = false },
-   Discord = { Enabled = false },
-   KeySystem = false
-})
-
--- Floating Buttons Setup
+-- -----------------------------------------------------------------
+-- GUI INITIALIZATION
+-- -----------------------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SmartMaster_FloatingUI"
+ScreenGui.Name = "SmartMaster_AdminGUI"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = PlayerGui
 
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 680, 0, 450)
+MainFrame.Position = UDim2.new(0.5, -340, 0.5, -225)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MainUICorner = Instance.new("UICorner")
+MainUICorner.CornerRadius = UDim.new(0, 8)
+MainUICorner.Parent = MainFrame
+
+-- Top Bar
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 8)
+TopBarCorner.Parent = TopBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -20, 1, 0)
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "SMART MASTER - ADMIN HUB"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 16
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TopBar
+
+-- Sidebar
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, 140, 1, -40)
+Sidebar.Position = UDim2.new(0, 0, 0, 40)
+Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = MainFrame
+
+local SidebarList = Instance.new("UIListLayout")
+SidebarList.Parent = Sidebar
+SidebarList.Padding = UDim.new(0, 5)
+SidebarList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local SidebarPadding = Instance.new("UIPadding")
+SidebarPadding.PaddingTop = UDim.new(0, 10)
+SidebarPadding.Parent = Sidebar
+
+-- Content Container
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Name = "ContentContainer"
+ContentContainer.Size = UDim2.new(1, -150, 1, -50)
+ContentContainer.Position = UDim2.new(0, 145, 0, 45)
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.Parent = MainFrame
+
+-- Page Frames
+local Pages = {}
+
+local function CreatePage(pageName)
+	local ScrollContent = Instance.new("ScrollingFrame")
+	ScrollContent.Name = pageName .. "_Page"
+	ScrollContent.Size = UDim2.new(1, 0, 1, 0)
+	ScrollContent.BackgroundTransparency = 1
+	ScrollContent.BorderSizePixel = 0
+	ScrollContent.ScrollBarThickness = 4
+	ScrollContent.ScrollBarImageColor3 = Color3.fromRGB(60, 60, 60)
+	ScrollContent.Visible = false
+	ScrollContent.Parent = ContentContainer
+
+	local UIListLayout = Instance.new("UIListLayout")
+	UIListLayout.Parent = ScrollContent
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	UIListLayout.Padding = UDim.new(0, 12)
+
+	local UIPadding = Instance.new("UIPadding")
+	UIPadding.PaddingLeft = UDim.new(0, 5)
+	UIPadding.PaddingRight = UDim.new(0, 10)
+	UIPadding.PaddingTop = UDim.new(0, 5)
+	UIPadding.Parent = ScrollContent
+
+	UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		ScrollContent.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 20)
+	end)
+
+	Pages[pageName] = ScrollContent
+	return ScrollContent
+end
+
+local Page_MySelf = CreatePage("MySelf")
+local Page_Attack = CreatePage("Attack")
+
+local function SwitchTab(selectedName)
+	for name, page in pairs(Pages) do
+		page.Visible = (name == selectedName)
+	end
+end
+
+local function CreateTabButton(btnText, pageName, isDefault)
+	local Btn = Instance.new("TextButton")
+	Btn.Name = "Tab_" .. pageName
+	Btn.Size = UDim2.new(1, -10, 0, 35)
+	Btn.BackgroundColor3 = isDefault and Color3.fromRGB(45, 45, 45) or Color3.fromRGB(28, 28, 28)
+	Btn.Text = btnText
+	Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Btn.Font = Enum.Font.GothamSemibold
+	Btn.TextSize = 13
+	Btn.Parent = Sidebar
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 6)
+	Corner.Parent = Btn
+
+	Btn.MouseButton1Click:Connect(function()
+		for _, child in ipairs(Sidebar:GetChildren()) do
+			if child:IsA("TextButton") then
+				child.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+			end
+		end
+		Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+		SwitchTab(pageName)
+	end)
+
+	if isDefault then SwitchTab(pageName) end
+end
+
+CreateTabButton("👤 My Self", "MySelf", true)
+CreateTabButton("⚔️ Attack", "Attack", false)
+
+-- Floating Action Buttons Container
 local FloatingContainer = Instance.new("Frame")
 FloatingContainer.Name = "FloatingContainer"
-FloatingContainer.Size = UDim2.new(0, 300, 0, 50)
+FloatingContainer.Size = UDim2.new(0, 350, 0, 50)
 FloatingContainer.Position = UDim2.new(0.02, 0, 0.65, 0)
 FloatingContainer.BackgroundTransparency = 1
 FloatingContainer.Parent = ScreenGui
@@ -42,595 +173,425 @@ FloatingList.Parent = FloatingContainer
 FloatingList.FillDirection = Enum.FillDirection.Horizontal
 FloatingList.Padding = UDim.new(0, 8)
 
-local function CreateFloatingButton(textIcon)
-   local Btn = Instance.new("TextButton")
-   Btn.Size = UDim2.new(0, 45, 0, 45)
-   Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-   Btn.Text = textIcon
-   Btn.TextSize = 18
-   Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-   Btn.Visible = false
-   Btn.Parent = FloatingContainer
+-- -----------------------------------------------------------------
+-- UI BUILDER HELPERS
+-- -----------------------------------------------------------------
+local function CreateSectionHeader(parentPage, titleText, layoutOrder)
+	local HeaderFrame = Instance.new("Frame")
+	HeaderFrame.Size = UDim2.new(1, 0, 0, 22)
+	HeaderFrame.BackgroundTransparency = 1
+	HeaderFrame.LayoutOrder = layoutOrder
 
-   local Corner = Instance.new("UICorner")
-   Corner.CornerRadius = UDim.new(0, 10)
-   Corner.Parent = Btn
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1, 0, 1, 0)
+	Label.BackgroundTransparency = 1
+	Label.Text = "--- " .. titleText .. " ---"
+	Label.TextColor3 = Color3.fromRGB(180, 180, 180)
+	Label.Font = Enum.Font.GothamBold
+	Label.TextSize = 12
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = HeaderFrame
 
-   local Stroke = Instance.new("UIStroke")
-   Stroke.Color = Color3.fromRGB(80, 80, 80)
-   Stroke.Thickness = 1.5
-   Stroke.Parent = Btn
-
-   return Btn
+	HeaderFrame.Parent = parentPage
+	return HeaderFrame
 end
 
--- ==========================================
+local function CreateToggle(parentPage, nameText, defaultState, layoutOrder, callback)
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(1, 0, 0, 35)
+	Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	Frame.LayoutOrder = layoutOrder
+	
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 6)
+	Corner.Parent = Frame
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(0.7, 0, 1, 0)
+	Label.Position = UDim2.new(0, 10, 0, 0)
+	Label.BackgroundTransparency = 1
+	Label.Text = nameText
+	Label.TextColor3 = Color3.fromRGB(220, 220, 220)
+	Label.Font = Enum.Font.Gotham
+	Label.TextSize = 13
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Frame
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.new(0, 65, 0, 23)
+	Button.Position = UDim2.new(1, -70, 0.5, -11)
+	Button.BackgroundColor3 = defaultState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 45)
+	Button.Text = defaultState and "ON" or "OFF"
+	Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Button.Font = Enum.Font.GothamBold
+	Button.TextSize = 11
+	Button.Parent = Frame
+
+	local BtnCorner = Instance.new("UICorner")
+	BtnCorner.CornerRadius = UDim.new(0, 4)
+	BtnCorner.Parent = Button
+
+	local state = defaultState
+	Button.MouseButton1Click:Connect(function()
+		state = not state
+		Button.Text = state and "ON" or "OFF"
+		Button.BackgroundColor3 = state and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 45)
+		callback(state)
+	end)
+
+	Frame.Parent = parentPage
+	return Frame
+end
+
+local function CreateSlider(parentPage, nameText, minVal, maxVal, defaultVal, layoutOrder, callback)
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(1, 0, 0, 48)
+	Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	Frame.LayoutOrder = layoutOrder
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 6)
+	Corner.Parent = Frame
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(0.5, 0, 0, 20)
+	Label.Position = UDim2.new(0, 10, 0, 4)
+	Label.BackgroundTransparency = 1
+	Label.Text = nameText
+	Label.TextColor3 = Color3.fromRGB(220, 220, 220)
+	Label.Font = Enum.Font.Gotham
+	Label.TextSize = 12
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Frame
+
+	local TextBox = Instance.new("TextBox")
+	TextBox.Size = UDim2.new(0, 55, 0, 18)
+	TextBox.Position = UDim2.new(1, -60, 0, 4)
+	TextBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	TextBox.Text = tostring(defaultVal)
+	TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	TextBox.Font = Enum.Font.Gotham
+	TextBox.TextSize = 11
+	TextBox.Parent = Frame
+
+	local BoxCorner = Instance.new("UICorner")
+	BoxCorner.CornerRadius = UDim.new(0, 4)
+	BoxCorner.Parent = TextBox
+
+	local SliderBack = Instance.new("Frame")
+	SliderBack.Size = UDim2.new(1, -20, 0, 5)
+	SliderBack.Position = UDim2.new(0, 10, 0, 30)
+	SliderBack.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	SliderBack.BorderSizePixel = 0
+	SliderBack.Parent = Frame
+
+	local SliderFill = Instance.new("Frame")
+	SliderFill.Size = UDim2.new((defaultVal - minVal)/(maxVal - minVal), 0, 1, 0)
+	SliderFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	SliderFill.BorderSizePixel = 0
+	SliderFill.Parent = SliderBack
+
+	local isDragging = false
+
+	local function UpdateVal(value)
+		local clamped = math.clamp(value, minVal, maxVal)
+		TextBox.Text = tostring(math.floor(clamped))
+		SliderFill.Size = UDim2.new((clamped - minVal)/(maxVal - minVal), 0, 1, 0)
+		callback(clamped)
+	end
+
+	SliderBack.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			isDragging = true
+			local pos = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
+			UpdateVal(minVal + (maxVal - minVal) * pos)
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			isDragging = false
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local pos = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
+			UpdateVal(minVal + (maxVal - minVal) * pos)
+		end
+	end)
+
+	TextBox.FocusLost:Connect(function()
+		local num = tonumber(TextBox.Text)
+		if num then UpdateVal(num) else TextBox.Text = tostring(minVal) end
+	end)
+
+	Frame.Parent = parentPage
+	return Frame
+end
+
+local function CreateFloatingButton(textIcon)
+	local Btn = Instance.new("TextButton")
+	Btn.Size = UDim2.new(0, 42, 0, 42)
+	Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	Btn.Text = textIcon
+	Btn.TextSize = 16
+	Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Btn.Visible = false
+	Btn.Parent = FloatingContainer
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 10)
+	Corner.Parent = Btn
+
+	local Stroke = Instance.new("UIStroke")
+	Stroke.Color = Color3.fromRGB(80, 80, 80)
+	Stroke.Thickness = 1.5
+	Stroke.Parent = Btn
+
+	return Btn
+end
+
+-- =================================================================
 -- TAB 1: MY SELF
--- ==========================================
-local TabMySelf = Window:CreateTab("👤 My Self", 4483362458)
+-- =================================================================
 
 -- 1. การเดิน
-TabMySelf:CreateSection("1. การเดิน")
+CreateSectionHeader(Page_MySelf, "1. การเดิน", 1)
 
 local currentSpeed = 16
-TabMySelf:CreateSlider({
-   Name = "ultra speed",
-   Range = {16, 500},
-   Increment = 1,
-   Suffix = " Speed",
-   CurrentValue = 16,
-   Flag = "UltraSpeed",
-   Callback = function(Value)
-      currentSpeed = Value
-      if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-         LocalPlayer.Character.Humanoid.WalkSpeed = Value
-      end
-   end,
-})
+CreateSlider(Page_MySelf, "ultra speed", 16, 500, 16, 2, function(val)
+	currentSpeed = val
+	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid.WalkSpeed = val
+	end
+end)
 
-local autoWalkEnabled = false
-local autoWalkActive = false
-local btnAutoWalk = CreateFloatingButton("👟")
+local autoWalkEnabled, autoWalkActive = false, false
+local autoWalkBtn = CreateFloatingButton("👟")
 
-TabMySelf:CreateToggle({
-   Name = "auto walk",
-   CurrentValue = false,
-   Flag = "AutoWalkToggle",
-   Callback = function(Value)
-      autoWalkEnabled = Value
-      btnAutoWalk.Visible = Value
-      if not Value then autoWalkActive = false btnAutoWalk.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
-   end,
-})
+CreateToggle(Page_MySelf, "auto walk", false, 3, function(state)
+	autoWalkEnabled = state
+	autoWalkBtn.Visible = state
+	if not state then 
+		autoWalkActive = false 
+		autoWalkBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30) 
+	end
+end)
 
-btnAutoWalk.MouseButton1Click:Connect(function()
-   autoWalkActive = not autoWalkActive
-   btnAutoWalk.BackgroundColor3 = autoWalkActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(30, 30, 30)
+autoWalkBtn.MouseButton1Click:Connect(function()
+	if autoWalkEnabled then
+		autoWalkActive = not autoWalkActive
+		autoWalkBtn.BackgroundColor3 = autoWalkActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(30, 30, 30)
+	end
 end)
 
 -- 2. การกระโดด
-TabMySelf:CreateSection("2. การกระโดด")
+CreateSectionHeader(Page_MySelf, "2. การกระโดด", 4)
 
 local currentJumpPower = 50
-TabMySelf:CreateSlider({
-   Name = "ultra jump",
-   Range = {50, 500},
-   Increment = 1,
-   Suffix = " Jump",
-   CurrentValue = 50,
-   Flag = "UltraJump",
-   Callback = function(Value)
-      currentJumpPower = Value
-      if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-         LocalPlayer.Character.Humanoid.UseJumpPower = true
-         LocalPlayer.Character.Humanoid.JumpPower = Value
-      end
-   end,
-})
+CreateSlider(Page_MySelf, "ultra jump", 50, 500, 50, 5, function(val)
+	currentJumpPower = val
+	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid.UseJumpPower = true
+		LocalPlayer.Character.Humanoid.JumpPower = val
+	end
+end)
 
-local autoJumpEnabled = false
-local autoJumpActive = false
-local btnAutoJump = CreateFloatingButton("🦘")
+local autoJumpEnabled, autoJumpActive = false, false
+local autoJumpBtn = CreateFloatingButton("🦘")
 
-TabMySelf:CreateToggle({
-   Name = "auto jump",
-   CurrentValue = false,
-   Flag = "AutoJumpToggle",
-   Callback = function(Value)
-      autoJumpEnabled = Value
-      btnAutoJump.Visible = Value
-      if not Value then autoJumpActive = false btnAutoJump.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
-   end,
-})
+CreateToggle(Page_MySelf, "auto jump", false, 6, function(state)
+	autoJumpEnabled = state
+	autoJumpBtn.Visible = state
+	if not state then 
+		autoJumpActive = false 
+		autoJumpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30) 
+	end
+end)
 
-btnAutoJump.MouseButton1Click:Connect(function()
-   autoJumpActive = not autoJumpActive
-   btnAutoJump.BackgroundColor3 = autoJumpActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(30, 30, 30)
+autoJumpBtn.MouseButton1Click:Connect(function()
+	if autoJumpEnabled then
+		autoJumpActive = not autoJumpActive
+		autoJumpBtn.BackgroundColor3 = autoJumpActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(30, 30, 30)
+	end
 end)
 
 local geppoEnabled = false
-TabMySelf:CreateToggle({
-   Name = "geppo",
-   CurrentValue = false,
-   Flag = "GeppoToggle",
-   Callback = function(Value) geppoEnabled = Value end,
-})
+CreateToggle(Page_MySelf, "geppo", false, 7, function(state) geppoEnabled = state end)
 
--- 3. ทะลุกำแพง & ล่องหน
-TabMySelf:CreateSection("3. ทะลุกำแพง & ล่องหน")
+UserInputService.JumpRequest:Connect(function()
+	if geppoEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+-- 3. ทะลุกำแพง
+CreateSectionHeader(Page_MySelf, "3. ทะลุกำแพง & ล่องหน", 8)
 
 local kamuiEnabled = false
-TabMySelf:CreateToggle({
-   Name = "kamui",
-   CurrentValue = false,
-   Flag = "KamuiToggle",
-   Callback = function(Value) kamuiEnabled = Value end,
-})
+CreateToggle(Page_MySelf, "kamui", false, 9, function(state) kamuiEnabled = state end)
 
-TabMySelf:CreateToggle({
-   Name = "Invisibility (ล่องหน)",
-   CurrentValue = false,
-   Flag = "InvisToggle",
-   Callback = function(Value)
-      local char = LocalPlayer.Character
-      if char then
-         for _, p in ipairs(char:GetDescendants()) do
-            if p:IsA("BasePart") or p:IsA("Decal") then
-               p.Transparency = Value and 1 or 0
-            end
-         end
-      end
-   end,
-})
-
--- 4. บิน & อมตะ
-TabMySelf:CreateSection("4. ระบบบิน & อมตะ")
+CreateToggle(Page_MySelf, "invisibility (ล่องหน)", false, 10, function(state)
+	local char = LocalPlayer.Character
+	if char then
+		for _, p in ipairs(char:GetDescendants()) do
+			if p:IsA("BasePart") or p:IsA("Decal") then
+				p.Transparency = state and 1 or 0
+			end
+		end
+	end
+end)
 
 local godModeEnabled = false
-TabMySelf:CreateToggle({
-   Name = "God Mode (อมตะ)",
-   CurrentValue = false,
-   Flag = "GodModeToggle",
-   Callback = function(Value)
-      godModeEnabled = Value
-      if not Value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-         LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-      end
-   end,
-})
+CreateToggle(Page_MySelf, "God Mode (อมตะ)", false, 11, function(state)
+	godModeEnabled = state
+	if not state and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+		LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+	end
+end)
+
+-- 4. บิน
+CreateSectionHeader(Page_MySelf, "4. ระบบบิน", 12)
 
 local flySpeed = 5
-TabMySelf:CreateSlider({
-   Name = "Fly Speed",
-   Range = {1, 100},
-   Increment = 1,
-   Suffix = " Speed",
-   CurrentValue = 5,
-   Flag = "FlySpeed",
-   Callback = function(Value) flySpeed = Value end,
-})
+CreateSlider(Page_MySelf, "fly speed", 1, 100, 5, 13, function(val) flySpeed = val end)
 
 local flyEnabled, flyKamuiEnabled = false, false
 local bodyVelocity, bodyGyro = nil, nil
 
 local function StopFly()
-   if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
-   if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
-   if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-      LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
-   end
+	if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
+	if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
+	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+		LocalPlayer.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+	end
 end
 
 local function StartFly()
-   local char = LocalPlayer.Character
-   if not char then return end
-   local hrp = char:FindFirstChild("HumanoidRootPart")
-   local hum = char:FindFirstChildOfClass("Humanoid")
-   if not hrp or not hum then return end
+	local char = LocalPlayer.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if not hrp or not hum then return end
 
-   StopFly()
-   hum.PlatformStand = true
+	StopFly()
+	hum.PlatformStand = true
 
-   bodyVelocity = Instance.new("BodyVelocity")
-   bodyVelocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-   bodyVelocity.Velocity = Vector3.zero
-   bodyVelocity.Parent = hrp
+	bodyVelocity = Instance.new("BodyVelocity")
+	bodyVelocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+	bodyVelocity.Velocity = Vector3.zero
+	bodyVelocity.Parent = hrp
 
-   bodyGyro = Instance.new("BodyGyro")
-   bodyGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
-   bodyGyro.P = 10000
-   bodyGyro.CFrame = hrp.CFrame
-   bodyGyro.Parent = hrp
+	bodyGyro = Instance.new("BodyGyro")
+	bodyGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+	bodyGyro.P = 10000
+	bodyGyro.CFrame = hrp.CFrame
+	bodyGyro.Parent = hrp
 end
 
-TabMySelf:CreateToggle({
-   Name = "fly",
-   CurrentValue = false,
-   Flag = "FlyToggle",
-   Callback = function(Value)
-      flyEnabled = Value
-      if flyEnabled then StartFly() else StopFly() end
-   end,
-})
+CreateToggle(Page_MySelf, "fly", false, 14, function(state)
+	flyEnabled = state
+	if flyEnabled then StartFly() else StopFly() end
+end)
 
-TabMySelf:CreateToggle({
-   Name = "fly kamui",
-   CurrentValue = false,
-   Flag = "FlyKamuiToggle",
-   Callback = function(Value)
-      flyKamuiEnabled = Value
-      if flyKamuiEnabled then StartFly() else StopFly() end
-   end,
-})
+CreateToggle(Page_MySelf, "fly kamui", false, 15, function(state)
+	flyKamuiEnabled = state
+	if flyKamuiEnabled then StartFly() else StopFly() end
+end)
 
 -- 5. เติมแสง
-TabMySelf:CreateSection("5. เติมแสง")
+CreateSectionHeader(Page_MySelf, "5. เติมแสง", 16)
 
-_G.FullBrightEnabled = false
-if not _G.FullBrightExecuted then
-   _G.NormalLightingSettings = {
-      Brightness = Lighting.Brightness,
-      ClockTime = Lighting.ClockTime,
-      FogEnd = Lighting.FogEnd,
-      GlobalShadows = Lighting.GlobalShadows,
-      Ambient = Lighting.Ambient
-   }
-   _G.FullBrightExecuted = true
-end
-
-TabMySelf:CreateToggle({
-   Name = "Night Vision VIP",
-   CurrentValue = false,
-   Flag = "NightVisionToggle",
-   Callback = function(Value)
-      _G.FullBrightEnabled = Value
-      if Value then
-         Lighting.Brightness = 1
-         Lighting.ClockTime = 12
-         Lighting.FogEnd = 786543
-         Lighting.GlobalShadows = false
-         Lighting.Ambient = Color3.fromRGB(178, 178, 178)
-      else
-         Lighting.Brightness = _G.NormalLightingSettings.Brightness
-         Lighting.ClockTime = _G.NormalLightingSettings.ClockTime
-         Lighting.FogEnd = _G.NormalLightingSettings.FogEnd
-         Lighting.GlobalShadows = _G.NormalLightingSettings.GlobalShadows
-         Lighting.Ambient = _G.NormalLightingSettings.Ambient
-      end
-   end,
-})
-
--- ==========================================
--- TAB 2: ATTACK
--- ==========================================
-local TabAttack = Window:CreateTab("⚔️ Attack", 4483362458)
-
--- Player Target Systems
-TabAttack:CreateSection("Player Target Options")
-
-local aimbotPlayerNearest = false
-local btnAimbotNearest = CreateFloatingButton("🎯")
-
-TabAttack:CreateToggle({
-   Name = "Aimbot player (nearest)",
-   CurrentValue = false,
-   Flag = "AimbotNearestToggle",
-   Callback = function(Value)
-      aimbotPlayerNearest = Value
-      btnAimbotNearest.Visible = Value
-   end,
-})
-
-local consistentTarget = nil
-local aimbotConsistent = false
-TabAttack:CreateToggle({
-   Name = "Aimbot player consistent",
-   CurrentValue = false,
-   Flag = "AimbotConsistentToggle",
-   Callback = function(Value)
-      aimbotConsistent = Value
-      if Value then
-         -- Find closest player and lock
-         local closest = nil
-         local maxDist = math.huge
-         for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-               local dist = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-               if dist < maxDist then
-                  maxDist = dist
-                  closest = p
-               end
-            end
-         end
-         consistentTarget = closest
-      else
-         consistentTarget = nil
-      end
-   end,
-})
-
--- ESP Player
-local espPlayerEnabled = false
-local espFolder = Instance.new("Folder", workspace)
-espFolder.Name = "SmartMaster_ESP"
-
-TabAttack:CreateToggle({
-   Name = "Observation Haki (ESP Player)",
-   CurrentValue = false,
-   Flag = "ESPObservation",
-   Callback = function(Value)
-      espPlayerEnabled = Value
-      if not Value then
-         espFolder:ClearAllChildren()
-      end
-   end,
-})
-
--- Chess Pieces & Player Actions
-TabAttack:CreateSection("Chess Pieces (Select Player)")
-
-local selectedPlayerName = nil
-local playerDropdown = nil
-
-local function GetPlayerNames()
-   local names = {}
-   for _, p in ipairs(Players:GetPlayers()) do
-      if p ~= LocalPlayer then table.insert(names, p.Name) end
-   end
-   return #names > 0 and names or {"ไม่มีผู้เล่นอื่น"}
-end
-
-playerDropdown = TabAttack:CreateDropdown({
-   Name = "chess pieces (เลือกผู้เล่น)",
-   Options = GetPlayerNames(),
-   CurrentOption = "เลือกผู้เล่น",
-   Flag = "ChessPiecesDropdown",
-   Callback = function(Option)
-      if type(Option) == "table" then Option = Option[1] end
-      selectedPlayerName = Option
-   end,
-})
-
-TabAttack:CreateButton({
-   Name = "refresh รายชื่อผู้เล่น",
-   Callback = function()
-      if playerDropdown then
-         playerDropdown:Refresh(GetPlayerNames())
-      end
-   end,
-})
-
-local currentTween = nil
-local tweenToPlayer = false
-TabAttack:CreateToggle({
-   Name = "Tween ไปหาผู้เล่นที่เลือก",
-   CurrentValue = false,
-   Flag = "TweenPlayerToggle",
-   Callback = function(Value)
-      tweenToPlayer = Value
-      if not Value and currentTween then
-         currentTween:Cancel()
-         currentTween = nil
-      end
-   end,
-})
-
-local specPlayerEnabled = false
-TabAttack:CreateToggle({
-   Name = "แอบมองผู้เล่นที่เลือก (Spectate)",
-   CurrentValue = false,
-   Flag = "SpectatePlayerToggle",
-   Callback = function(Value)
-      specPlayerEnabled = Value
-      if not Value then
-         Camera.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
-      end
-   end,
-})
-
--- Mob Target Systems
-TabAttack:CreateSection("Mob Target Options")
-
-local aimbotMobNearest = false
-TabAttack:CreateToggle({
-   Name = "Aimbot mob (nearest)",
-   CurrentValue = false,
-   Flag = "AimbotMobNearest",
-   Callback = function(Value) aimbotMobNearest = Value end,
-})
-
-local aimbotMobConsistent = false
-local consistentMobTarget = nil
-TabAttack:CreateToggle({
-   Name = "Aimbot mob consistent (เล็งตัวเดิม)",
-   CurrentValue = false,
-   Flag = "AimbotMobConsistent",
-   Callback = function(Value)
-      aimbotMobConsistent = Value
-      if not Value then consistentMobTarget = nil end
-   end,
-})
-
-local espMobEnabled = false
-TabAttack:CreateToggle({
-   Name = "Observation Haki v2 (ESP Mob)",
-   CurrentValue = false,
-   Flag = "ESPMobToggle",
-   Callback = function(Value)
-      espMobEnabled = Value
-      if not Value then
-         for _, v in ipairs(workspace:GetDescendants()) do
-            if v.Name == "MobHighlight" then v:Destroy() end
-         end
-      end
-   end,
-})
-
--- ==========================================
--- BACKGROUND LOGICS & LOOPS
--- ==========================================
-
--- Geppo Air Jump
-UserInputService.JumpRequest:Connect(function()
-   if geppoEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-      LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-   end
-end)
-
--- Stepped Loop (Kamui & GodMode)
-RunService.Stepped:Connect(function()
-   if (kamuiEnabled or flyKamuiEnabled or tweenToPlayer) and LocalPlayer.Character then
-      for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-         if part:IsA("BasePart") then part.CanCollide = false end
-      end
-   end
-
-   if godModeEnabled and LocalPlayer.Character then
-      local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-      if hum then
-         hum.Health = hum.MaxHealth
-         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-      end
-   end
-end)
-
--- RenderStepped Main Loop
-RunService.RenderStepped:Connect(function()
-   local char = LocalPlayer.Character
-   if not char then return end
-   local hum = char:FindFirstChildOfClass("Humanoid")
-   local hrp = char:FindFirstChild("HumanoidRootPart")
-
-   -- Lock Speed & Jump
-   if hum then
-      if currentSpeed ~= 16 then hum.WalkSpeed = currentSpeed end
-      if currentJumpPower ~= 50 then 
-         hum.UseJumpPower = true
-         hum.JumpPower = currentJumpPower 
-      end
-   end
-
-   -- Auto Walk
-   if autoWalkEnabled and autoWalkActive and hrp and hum then
-      hum:Move(Vector3.new(hrp.CFrame.LookVector.X, 0, hrp.CFrame.LookVector.Z), false)
-   end
-
-   -- Auto Jump
-   if autoJumpEnabled and autoJumpActive and hum then
-      hum.Jump = true
-   end
-
-   -- Flying Logic
-   if (flyEnabled or flyKamuiEnabled) and hrp then
-      if not bodyVelocity or not bodyGyro or bodyVelocity.Parent ~= hrp then StartFly() end
-      local moveVector = hum and hum.MoveDirection or Vector3.zero
-      local realVelocity = flySpeed * 10
-
-      if moveVector.Magnitude > 0 then
-         local camCFrame = Camera.CFrame
-         local flyDirection = (camCFrame.LookVector * -moveVector.Z) + (camCFrame.RightVector * moveVector.X)
-         if flyDirection.Magnitude > 0 then flyDirection = flyDirection.Unit end
-
-         bodyVelocity.Velocity = flyDirection * realVelocity
-         bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + flyDirection) * CFrame.Angles(math.rad(-70), 0, 0)
-      else
-         bodyVelocity.Velocity = Vector3.zero
-         bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + Camera.CFrame.LookVector)
-      end
-   end
-
-   -- Player Aimbot Nearest
-   if aimbotPlayerNearest and hrp then
-      local closest = nil
-      local maxDist = math.huge
-      for _, p in ipairs(Players:GetPlayers()) do
-         if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local dist = (hrp.Position - p.Character.HumanoidRootPart.Position).Magnitude
-            if dist < maxDist then
-               maxDist = dist
-               closest = p
-            end
-         end
-      end
-      if closest and closest.Character and closest.Character:FindFirstChild("HumanoidRootPart") then
-         Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, closest.Character.HumanoidRootPart.Position)
-      end
-   end
-
-   -- Player Aimbot Consistent
-   if aimbotConsistent and consistentTarget and consistentTarget.Character and consistentTarget.Character:FindFirstChild("HumanoidRootPart") then
-      Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, consistentTarget.Character.HumanoidRootPart.Position)
-   end
-
-   -- Mob Aimbot (Nearest & Visible Only)
-   if aimbotMobNearest and hrp then
-      local closestMob = nil
-      local maxDist = math.huge
-      for _, obj in ipairs(workspace:GetDescendants()) do
-         if obj:IsA("Humanoid") and obj.Parent ~= char and not Players:GetPlayerFromCharacter(obj.Parent) then
-            local mobHrp = obj.Parent:FindFirstChild("HumanoidRootPart") or obj.Parent:FindFirstChild("Head")
-            if mobHrp then
-               local _, isVisible = Camera:WorldToScreenPoint(mobHrp.Position)
-               if isVisible then
-                  local ray = Ray.new(Camera.CFrame.Position, (mobHrp.Position - Camera.CFrame.Position).Unit * 500)
-                  local hit = workspace:FindPartOnWithIgnoreList(ray, {char})
-                  if hit and hit:IsDescendantOf(obj.Parent) then
-                     local dist = (hrp.Position - mobHrp.Position).Magnitude
-                     if dist < maxDist then
-                        maxDist = dist
-                        closestMob = mobHrp
-                     end
-                  end
-               end
-            end
-         end
-      end
-      if closestMob then
-         Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, closestMob.Position)
-      end
-   end
-
-   -- Tween To Selected Player
-   if tweenToPlayer and selectedPlayerName and hrp then
-      local targetP = Players:FindFirstChild(selectedPlayerName)
-      if targetP and targetP.Character and targetP.Character:FindFirstChild("HumanoidRootPart") then
-         local targetHrp = targetP.Character.HumanoidRootPart
-         local dist = (hrp.Position - targetHrp.Position).Magnitude
-         if dist > 10 then
-            local targetPos = targetHrp.Position - (targetHrp.Position - hrp.Position).Unit * 10
-            local tweenInfo = TweenInfo.new(dist / 30, Enum.EasingStyle.Linear)
-            if currentTween then currentTween:Cancel() end
-            currentTween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
-            currentTween:Play()
-         end
-      end
-   end
-
-   -- Spectate Player
-   if specPlayerEnabled and selectedPlayerName then
-      local targetP = Players:FindFirstChild(selectedPlayerName)
-      if targetP and targetP.Character and targetP.Character:FindFirstChild("Humanoid") then
-         Camera.CameraSubject = targetP.Character.Humanoid
-      end
-   end
-end)
-
--- ESP Players Loop
 task.spawn(function()
-   while task.wait(1) do
-      if espPlayerEnabled then
-         espFolder:ClearAllChildren()
-         for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-               local box = Instance.new("Highlight")
-               box.Name = "ESP_" .. p.Name
-               box.Adornee = p.Character
-               box.FillColor = Color3.fromRGB(255, 0, 0)
-               box.OutlineColor = Color3.fromRGB(255, 255, 255)
-               box.Parent = espFolder
-            end
-         end
-      end
+	if not _G.FullBrightExecuted then
+		_G.FullBrightEnabled = false
+		_G.NormalLightingSettings = {
+			Brightness = Lighting.Brightness,
+			ClockTime = Lighting.ClockTime,
+			FogEnd = Lighting.FogEnd,
+			GlobalShadows = Lighting.GlobalShadows,
+			Ambient = Lighting.Ambient
+		}
 
-      if espMobEnabled then
-         for _, obj in ipairs(workspace
+		Lighting:GetPropertyChangedSignal("Brightness"):Connect(function()
+			if Lighting.Brightness ~= 1 and Lighting.Brightness ~= _G.NormalLightingSettings.Brightness then
+				_G.NormalLightingSettings.Brightness = Lighting.Brightness
+				if not _G.FullBrightEnabled then repeat task.wait() until _G.FullBrightEnabled end
+				Lighting.Brightness = 1
+			end
+		end)
+
+		Lighting:GetPropertyChangedSignal("ClockTime"):Connect(function()
+			if Lighting.ClockTime ~= 12 and Lighting.ClockTime ~= _G.NormalLightingSettings.ClockTime then
+				_G.NormalLightingSettings.ClockTime = Lighting.ClockTime
+				if not _G.FullBrightEnabled then repeat task.wait() until _G.FullBrightEnabled end
+				Lighting.ClockTime = 12
+			end
+		end)
+
+		Lighting:GetPropertyChangedSignal("FogEnd"):Connect(function()
+			if Lighting.FogEnd ~= 786543 and Lighting.FogEnd ~= _G.NormalLightingSettings.FogEnd then
+				_G.NormalLightingSettings.FogEnd = Lighting.FogEnd
+				if not _G.FullBrightEnabled then repeat task.wait() until _G.FullBrightEnabled end
+				Lighting.FogEnd = 786543
+			end
+		end)
+
+		Lighting:GetPropertyChangedSignal("GlobalShadows"):Connect(function()
+			if Lighting.GlobalShadows ~= false and Lighting.GlobalShadows ~= _G.NormalLightingSettings.GlobalShadows then
+				_G.NormalLightingSettings.GlobalShadows = Lighting.GlobalShadows
+				if not _G.FullBrightEnabled then repeat task.wait() until _G.FullBrightEnabled end
+				Lighting.GlobalShadows = false
+			end
+		end)
+
+		Lighting:GetPropertyChangedSignal("Ambient"):Connect(function()
+			if Lighting.Ambient ~= Color3.fromRGB(178, 178, 178) and Lighting.Ambient ~= _G.NormalLightingSettings.Ambient then
+				_G.NormalLightingSettings.Ambient = Lighting.Ambient
+				if not _G.FullBrightEnabled then repeat task.wait() until _G.FullBrightEnabled end
+				Lighting.Ambient = Color3.fromRGB(178, 178, 178)
+			end
+		end)
+
+		_G.FullBrightExecuted = true
+	end
+end)
+
+CreateToggle(Page_MySelf, "Night Vision VIP", false, 17, function(state)
+	_G.FullBrightEnabled = state
+	if state then
+		Lighting.Brightness = 1
+		Lighting.ClockTime = 12
+		Lighting.FogEnd = 786543
+		Lighting.GlobalShadows = false
+		Lighting.Ambient = Color3.fromRGB(178, 178, 178)
+	else
+		Lighting.Brightness = _G.NormalLightingSettings.Brightness
+		Lighting.ClockTime = _G.NormalLightingSettings.ClockTime
+		Lighting.FogEnd = _G.NormalLightingSettings.FogEnd
+		Lighting.GlobalShadows = _G.NormalLightingSettings.GlobalShadows
+		Lighting.Ambient = _G.NormalLightingSettings.Ambient
+	end
+end)
+
+-- =================================================================
+-- TAB 2: ATTACK
+-- =================================================================
+
+-- 1. Player Aiming & ESP
+CreateSectionHeader(Page_Attack, "1. ระบบผู้เล่น (Player System)", 1)
+
+local aimPlayerBtn = CreateFloatingButton("🎯")
+local aimPlayerActive, aimPlayerEnabled = false, false
+
+CreateToggle(Page_Attack, "Aimbot player (nearest)", false, 2, function(state)
+	aimPlayerEnabled = state
+	aimPlayerBtn.Visible = state
+	if not state then aimPlayerActive = false aimPlayerBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30) end
+end)
+
+aimPlayerBtn.MouseButton1Click:Connect(function()
+	if aimPlayerEnabled then
+		aimPlayerActive = not aimPlayerActive
+		aimPlayerBtn.BackgroundC
